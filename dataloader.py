@@ -1,7 +1,7 @@
 from nuimages import NuImages
 import numpy as np
 from PIL import Image
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader, sampler
 
 from dataclasses import dataclass
 import os.path as osp
@@ -41,3 +41,22 @@ class NuImagesDataset(Dataset):
             sem_seg_sample = self.transform(sem_seg_sample)
 
         return sem_seg_sample
+
+    def get_all_keys(self):
+        return [sample['token'] for sample in self.nuimages.sample]
+
+def get_dataloaders(batch_size: int, augmentation_transform=None):
+    train_nuimages = NuImages(dataroot='/data/sets/nuimages', version='v1.0-train', verbose=True, lazy=True)
+    val_nuimages = NuImages(dataroot='/data/sets/nuimages', version='v1.0-val', verbose=True, lazy=True)
+
+    train_dataset = NuImagesDataset(train_nuimages, transform=augmentation_transform)
+    # May want to apply a standardization transform to the val dataset, but doing no transform for now.
+    val_dataset = NuImagesDataset(val_nuimages, transform=None)
+
+    train_keys = train_dataset.get_all_keys()
+    val_keys = val_dataset.get_all_keys()
+
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, sampler=sampler.SubsetRandomSampler(train_keys))
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, sampler=sampler.SubsetRandomSampler(val_keys))
+
+    return {"train": train_dataloader, "val": val_dataloader}

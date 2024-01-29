@@ -7,10 +7,10 @@ from dataclasses import dataclass
 import os.path as osp
 
 
-@dataclass
-class SemSegSample:
-    image: np.ndarray
-    segmentation_mask: np.ndarray
+# @dataclass
+# class SemSegSample:
+#     image: np.ndarray
+#     segmentation_mask: np.ndarray
 
 
 class NuImagesDataset(Dataset):
@@ -23,7 +23,7 @@ class NuImagesDataset(Dataset):
     def __len__(self):
         return len(self.nuimages.sample)
 
-    def __getitem__(self, sample_token) -> SemSegSample:
+    def __getitem__(self, sample_token) -> Dict:
         # if torch.is_tensor(sample_token):
         #     sample_token = sample_token.tolist()
 
@@ -35,7 +35,10 @@ class NuImagesDataset(Dataset):
         im_path = osp.join(self.nuimages.dataroot, sample_data['filename'])
         im = Image.open(im_path)
 
-        sem_seg_sample = SemSegSample(image=im, segmentation_mask=semantic_mask)
+        sem_seg_sample = {
+            "image": im,
+            "segmentation_mask": semantic_mask,
+        )
 
         if self.transform:
             sem_seg_sample = self.transform(sem_seg_sample)

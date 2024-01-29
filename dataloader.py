@@ -48,6 +48,14 @@ class NuImagesDataset(Dataset):
     def get_all_keys(self):
         return [sample['token'] for sample in self.nuimages.sample]
 
+def get_mini_dataloader(batch_size: int, augmentation_transform=None):
+    nuimages = NuImages(dataroot='/data/sets/nuimages', version='v1.0-mini', verbose=False, lazy=True)
+    dataset = NuImagesDataset(nuimages, transform=augmentation_transform)
+
+    all_keys = dataset.get_all_keys()
+
+    return DataLoader(dataset, batch_size=batch_size, sampler=sampler.SubsetRandomSampler(all_keys))
+
 def get_dataloaders(batch_size: int, augmentation_transform=None):
     train_nuimages = NuImages(dataroot='/data/sets/nuimages', version='v1.0-train', verbose=True, lazy=True)
     val_nuimages = NuImages(dataroot='/data/sets/nuimages', version='v1.0-val', verbose=True, lazy=True)

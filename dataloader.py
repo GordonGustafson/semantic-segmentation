@@ -1,6 +1,7 @@
 from nuimages import NuImages
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader, sampler
+import numpy as np
 
 import os.path as osp
 
@@ -19,6 +20,8 @@ class NuImagesDataset(Dataset):
         sample = self.nuimages.get('sample', sample_token)
         key_camera_token = sample['key_camera_token']
         semantic_mask, instance_mask = self.nuimages.get_segmentation(key_camera_token)
+        # Targets for Torch's cross_entropy function have to be Longs, not Ints.
+        semantic_mask = semantic_mask.astype(np.int64)
 
         sample_data = self.nuimages.get('sample_data', key_camera_token)
         im_path = osp.join(self.nuimages.dataroot, sample_data['filename'])

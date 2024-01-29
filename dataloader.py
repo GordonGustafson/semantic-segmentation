@@ -1,16 +1,8 @@
 from nuimages import NuImages
-import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader, sampler
 
-from dataclasses import dataclass
 import os.path as osp
-
-
-# @dataclass
-# class SemSegSample:
-#     image: np.ndarray
-#     segmentation_mask: np.ndarray
 
 
 class NuImagesDataset(Dataset):
@@ -24,9 +16,6 @@ class NuImagesDataset(Dataset):
         return len(self.nuimages.sample)
 
     def __getitem__(self, sample_token):
-        # if torch.is_tensor(sample_token):
-        #     sample_token = sample_token.tolist()
-
         sample = self.nuimages.get('sample', sample_token)
         key_camera_token = sample['key_camera_token']
         semantic_mask, instance_mask = self.nuimages.get_segmentation(key_camera_token)
@@ -48,21 +37,21 @@ class NuImagesDataset(Dataset):
     def get_all_keys(self):
         return [sample['token'] for sample in self.nuimages.sample]
 
-def get_mini_dataloader(batch_size: int, augmentation_transform=None):
+def get_mini_dataloader(batch_size: int, transform):
     nuimages = NuImages(dataroot='/data/sets/nuimages', version='v1.0-mini', verbose=False, lazy=True)
-    dataset = NuImagesDataset(nuimages, transform=augmentation_transform)
+    dataset = NuImagesDataset(nuimages, transform=transform)
 
     all_keys = dataset.get_all_keys()
 
     return DataLoader(dataset, batch_size=batch_size, sampler=sampler.SubsetRandomSampler(all_keys))
 
-def get_dataloaders(batch_size: int, augmentation_transform=None):
+def get_dataloaders(batch_size: int, train_transform, val_transform):
     train_nuimages = NuImages(dataroot='/data/sets/nuimages', version='v1.0-train', verbose=True, lazy=True)
     val_nuimages = NuImages(dataroot='/data/sets/nuimages', version='v1.0-val', verbose=True, lazy=True)
 
-    train_dataset = NuImagesDataset(train_nuimages, transform=augmentation_transform)
+    train_dataset = NuImagesDataset(train_nuimages, transform=train_transform)
     # May want to apply a standardization transform to the val dataset, but doing no transform for now.
-    val_dataset = NuImagesDataset(val_nuimages, transform=None)
+    val_dataset = NuImagesDataset(val_nuimages, transform=val_transform)
 
     train_keys = train_dataset.get_all_keys()
     val_keys = val_dataset.get_all_keys()

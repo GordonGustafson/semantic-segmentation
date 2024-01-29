@@ -23,7 +23,7 @@ class NuImagesDataset(Dataset):
     def __len__(self):
         return len(self.nuimages.sample)
 
-    def __getitem__(self, sample_token) -> Dict:
+    def __getitem__(self, sample_token):
         # if torch.is_tensor(sample_token):
         #     sample_token = sample_token.tolist()
 
@@ -38,7 +38,7 @@ class NuImagesDataset(Dataset):
         sem_seg_sample = {
             "image": im,
             "segmentation_mask": semantic_mask,
-        )
+        }
 
         if self.transform:
             sem_seg_sample = self.transform(sem_seg_sample)

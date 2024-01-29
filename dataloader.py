@@ -60,3 +60,10 @@ def get_dataloaders(batch_size: int, train_transform, val_transform):
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, sampler=sampler.SubsetRandomSampler(val_keys))
 
     return {"train": train_dataloader, "val": val_dataloader}
+
+def image_transform_to_dict_transform(transform):
+    def dict_transform(dic):
+        return {k: (transform(v) if k == "image" else v)
+                for k, v in dic.items()}
+    return dict_transform
+

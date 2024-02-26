@@ -7,8 +7,6 @@ import os.path as osp
 
 
 class NuImagesDataset(Dataset):
-    """Face Landmarks dataset."""
-
     def __init__(self, nuimages, transform=None):
         self.nuimages = nuimages
         self.transform = transform

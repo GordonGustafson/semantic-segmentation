@@ -2,6 +2,7 @@ from dataloader import *
 from evaluation import confusion_matrix, f1_score, precision_and_recall
 
 from torch import optim, nn
+import torchvision.transforms as T
 import lightning as L
 
 # TODO: figure out the correct value for this.
@@ -24,14 +25,14 @@ class PixelWiseSegmentation(L.LightningModule):
     def training_step(self, batch, batch_idx):
         predicted_class_probabilities = self.forward(batch, batch_idx)  # shape = (N, Classes, H, W)
         gt_segmentation_masks = batch["segmentation_mask"]              # shape = (N, H, W)
-        train_loss = nn.functional.cross_entropy(predicted_segmentation_masks, gt_segmentation_masks)
+        train_loss = nn.functional.cross_entropy(predicted_class_probabilities, gt_segmentation_masks)
         self.log("train_loss", train_loss)
         return train_loss
 
     def validation_step(self, batch, batch_idx):
         predicted_class_probabilities = self.forward(batch, batch_idx)  # shape = (N, Classes, H, W)
         gt_segmentation_masks = batch["segmentation_mask"]              # shape = (N, H, W)
-        val_loss = nn.functional.cross_entropy(predicted_segmentation_masks, gt_segmentation_masks)
+        val_loss = nn.functional.cross_entropy(predicted_class_probabilities, gt_segmentation_masks)
         self.log("val_loss", val_loss)
 
         predicted_masks = torch.max(predicted_class_probabilities, dim=1)  # shape = (N, H, W)
@@ -52,7 +53,10 @@ conv = nn.Conv2d(in_channels=3, out_channels=NUM_CLASSES, kernel_size=1, padding
 model = PixelWiseSegmentation(conv)
 
 # setup data
-train_dataloader = get_mini_dataloader(batch_size=2)
+transform = image_transform_to_dict_transform(T.ToTensor())
+# train_dataloader = get_mini_dataloader(batch_size=2, transform=transform)
+# train_dataloader = get_dataloaders(batch_size=2, train_transform=transform, val_transform=transform)["train"]
+train_dataloader = get_mini_dataloader(batch_size=2, transform=transform)
 
 # train the model (hint: here are some helpful Trainer arguments for rapid idea iteration)
 trainer = L.Trainer(limit_train_batches=100, max_epochs=1)
